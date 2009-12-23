@@ -1,0 +1,33 @@
+function imgout=mm_snap(topdir,imsubdir,imagecount,chans,exTimes)
+
+%This is the basic algorithm to snap an image in micromanager from Matlab.
+%Each call will produce one image per channel for a given field with
+%accompanying metadata for the RGB stack.
+% Variables:
+%   topdir: a string that contains the top or subdirectories specified by the user
+%   imsubdir: a string containing identifiers for a particular set of
+%              images, be it well number, conditions, etc.
+%   chans: a logical vector with 1s marking the desired channels for each
+%           stack
+%   exTimes: a row vector containing the exposure times for each channel
+
+%load mmc and get channel names
+global mmc
+chNames=mmc.getAvailableConfigs('Channel');
+n=find(chans);
+m=find(exTimes);
+
+%check if the specified directory exists and create the new subdirectory
+if isdir(strcat(topdir,imsubdir))==0
+    mkdir(topdir,imsubdir)
+
+for i=1:sum(chans)
+    mmc.setConfig('Channel',chNames.get(n(i)-1));
+    mmc.setExposure(exTimes(m(i)));
+    mmc.snapImage();
+    img1=mmc.getImage();
+    imH=mmc.getImageHeight();
+    imW=mmc.getImageWidth();
+    imgout=uint16(reshape(img1,imH,imW));
+    imwrite(imgout,strcat(topdir,imsubdir,'img_000000000_',char(chNames.get(n(i)-1)),'_',num2str(imagecount),'.tif'),'tif')
+end
