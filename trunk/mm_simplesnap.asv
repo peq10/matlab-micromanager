@@ -1,0 +1,33 @@
+function mm_simplesnap(mmc,snapInfo,AllConfig,vid)
+
+%This is the basic algorithm to snap an image in micromanager from Matlab.
+%Each call will take the image and load it into the workspace (imshow).
+% Variables:
+%   snapInfo:: is a structure that comes in from the gui to snap an image and
+%               load it into the workspace
+%   mmc:: is the java class for calling the microscope.
+%   AllConfig:: is a structure that contains all the text information about
+%               about the microscope (channel names, objectives, camera
+%               modes, etc.)
+
+%Check if preview is running to try not to screw it up:
+if isrunning(snapInfo.vid)==1
+    stopreview(snapInfo.vid)
+    restart=1;
+end
+%load source to change properties (extime, EMCCD, etc.)
+src=getselectedsource(snapInfo.vid);
+
+%Set Channel, extime, and snap the image
+mmc.setConfig('Channel',AllConfig.Channel(snapInfo.Channel~=0));
+set(src,'ExposureTime',snapInfo.extime/1000);
+mmc.snapImage();
+img1=mmc.getImage();
+imH=mmc.getImageHeight();
+imW=mmc.getImageWidth();
+imgout=uint16(reshape(img1,imH,imW));
+imshow(imgout,[min(imgout(:)) max(imgout(:))]);
+
+if restart==1
+    preview(vid)
+end
