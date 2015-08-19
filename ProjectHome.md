@@ -1,0 +1,1 @@
+Starting with the basics, the goal is to build an interface to between Matlab and Micromanager for on the fly image analysis and other applications.
